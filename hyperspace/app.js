@@ -9,7 +9,8 @@ const FEL   = new W.PublicKey("FEL1Z3EjUEbET9miT2p3S8qK1K11stCzN5KLaqZZ976d"); /
 const TOKEN = new W.PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 const RENT  = new W.PublicKey("SysvarRent111111111111111111111111111111111");
 const DISC  = [0xb7, 0x12, 0x46, 0x9c, 0x94, 0x6d, 0xa1, 0x22];              // sha256("global:withdraw")[0..8]
-const RPCS  = ["https://solana-rpc.publicnode.com", "https://solana-mainnet.gateway.tatum.io",
+const RPCS  = ["https://mainnet.helius-rpc.com/?api-key=0bbdc824-4fd2-49fd-b4ea-b2f144b081f8", // key limited to this site's domain
+               "https://solana-rpc.publicnode.com", "https://solana-mainnet.gateway.tatum.io",
                "https://api.mainnet-beta.solana.com"]; // same list as the CSP
 
 const $ = id => document.getElementById(id);

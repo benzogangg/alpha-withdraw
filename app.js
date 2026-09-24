@@ -8,7 +8,8 @@ const W = solanaWeb3;
 const ALPHA = new W.PublicKey("HZaWndaNWHFDd9Dhk5pqUUtsmoBCqzb1MLu3NAh1VX6B"); // Alpha.art program
 const OFFER_SIZE = 85;             // offer account: [0] tag=1, [1] bidder @1, mint @33, price u64 @65
 const PER_TX = 10;                 // cancels per transaction (each ix is tiny: 2 accounts, 1 byte)
-const RPCS  = ["https://solana-rpc.publicnode.com", "https://solana-mainnet.gateway.tatum.io",
+const RPCS  = ["https://mainnet.helius-rpc.com/?api-key=0bbdc824-4fd2-49fd-b4ea-b2f144b081f8", // key limited to this site's domain
+               "https://solana-rpc.publicnode.com", "https://solana-mainnet.gateway.tatum.io",
                "https://api.mainnet-beta.solana.com"]; // same list as the CSP
 
 const $ = id => document.getElementById(id);
