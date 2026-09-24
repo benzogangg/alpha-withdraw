@@ -1,5 +1,9 @@
 # Alpha.art offer withdraw
 
+**Open the page: https://benzogangg.github.io/alpha-withdraw/**
+
+It's served by GitHub Pages straight from this repository, so the page is exactly the code you see here.
+
 Unofficial, open-source page that returns SOL locked in old Alpha.art offers to the wallet that made them.
 Not affiliated with Alpha.art. The Alpha.art website is gone, but its on-chain program is still live and
 still lets the bidder cancel an offer.
