@@ -46,3 +46,10 @@ python3 build_index.py
   the withdrawal without signing anything.
 - Your wallet (Phantom, Solflare, Backpack) shows its own simulation before you approve.
 - `web3.iife.min.js` is `@solana/web3.js` 1.98.0 from npm, unchanged.
+
+## Hyperspace escrow withdraw
+
+Also had bids on **Hyperspace**? A copy of the Hyperspace escrow withdraw page is served from this repository:
+**https://benzogangg.github.io/alpha-withdraw/hyperspace/** (code in [`hyperspace/`](hyperspace/)).
+It sends the Hyperspace program's own `Withdraw` instruction and moves your escrow balance to your connected wallet.
+Full description: https://github.com/benzogangg/hyperspace-withdraw
