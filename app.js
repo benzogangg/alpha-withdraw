@@ -8,7 +8,8 @@ const W = solanaWeb3;
 const ALPHA = new W.PublicKey("HZaWndaNWHFDd9Dhk5pqUUtsmoBCqzb1MLu3NAh1VX6B"); // Alpha.art program
 const OFFER_SIZE = 85;             // offer account: [0] tag=1, [1] bidder @1, mint @33, price u64 @65
 const PER_TX = 10;                 // cancels per transaction (each ix is tiny: 2 accounts, 1 byte)
-const RPCS  = ["https://solana-rpc.publicnode.com", "https://api.mainnet-beta.solana.com"]; // same list as the CSP
+const RPCS  = ["https://solana-rpc.publicnode.com", "https://solana-mainnet.gateway.tatum.io",
+               "https://api.mainnet-beta.solana.com"]; // same list as the CSP
 
 const $ = id => document.getElementById(id);
 let conn, provider, owner, offers = [];
@@ -38,13 +39,18 @@ function setSim(text, cls) {
 const sol = l => (l / 1e9).toLocaleString("en-US", { maximumFractionDigits: 9 }) + " SOL";
 const short = s => s.slice(0, 4) + "…" + s.slice(-4);
 
+const timeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
+
+// Try each public RPC (twice over), keep the first that answers. Any later error drops it (conn = null),
+// so the next button press starts over and can fall back to another RPC.
 async function rpc() {
   if (conn) return conn;
-  for (const u of RPCS) {
-    try { const c = new W.Connection(u, "confirmed"); await c.getLatestBlockhash(); return (conn = c); }
-    catch (e) { console.warn("RPC", u, e); }
-  }
-  throw new Error("could not connect to a Solana RPC");
+  for (let round = 0; round < 2; round++)
+    for (const u of RPCS) {
+      try { const c = new W.Connection(u, "confirmed"); await timeout(c.getLatestBlockhash(), 8000); return (conn = c); }
+      catch (e) { console.warn("RPC", u, e); }
+    }
+  throw new Error("could not connect to a Solana RPC. Check your connection, turn off ad/privacy blockers for this page and try again.");
 }
 
 // Public RPCs refuse to search the Alpha.art program from a browser, so offers.json (built by
@@ -161,7 +167,7 @@ $("connect").onclick = async () => {
       log("Ready: press “Withdraw”. " + (n > 1 ? "Your wallet will ask you to approve " + n + " transactions." : "Your wallet will show that you receive the amount above."));
       $("withdraw").disabled = false;
     }
-  } catch (e) { log("Error: " + (e.message || e), "bad"); }
+  } catch (e) { conn = null; log("Error: " + (e.message || e), "bad"); }
 };
 
 $("withdraw").onclick = async () => {
@@ -199,6 +205,7 @@ $("withdraw").onclick = async () => {
         sigs.map((g, i) => ({ href: "https://solscan.io/tx/" + encodeURIComponent(g), text: "View on Solscan" + (sigs.length > 1 ? " (" + (i + 1) + ")" : "") })));
     offers = (await inspect(owner)).list;
   } catch (e) {
+    conn = null;
     log("Error: " + (e.message || e), "bad");
     $("withdraw").disabled = false;
   }
@@ -212,5 +219,5 @@ $("probeBtn").onclick = async () => {
     const s = await inspect(pk);
     log(s.ok ? "Withdrawing these offers passes simulation. Only the wallet's owner can sign it."
              : s.list.length ? "Simulation failed." : "No open Alpha.art offers for this wallet.", s.ok ? "ok" : "bad");
-  } catch (e) { log("Error: " + (e.message || e), "bad"); }
+  } catch (e) { conn = null; log("Error: " + (e.message || e), "bad"); }
 };

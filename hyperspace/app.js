@@ -9,7 +9,8 @@ const FEL   = new W.PublicKey("FEL1Z3EjUEbET9miT2p3S8qK1K11stCzN5KLaqZZ976d"); /
 const TOKEN = new W.PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 const RENT  = new W.PublicKey("SysvarRent111111111111111111111111111111111");
 const DISC  = [0xb7, 0x12, 0x46, 0x9c, 0x94, 0x6d, 0xa1, 0x22];              // sha256("global:withdraw")[0..8]
-const RPCS  = ["https://solana-rpc.publicnode.com", "https://api.mainnet-beta.solana.com"]; // same list as the CSP
+const RPCS  = ["https://solana-rpc.publicnode.com", "https://solana-mainnet.gateway.tatum.io",
+               "https://api.mainnet-beta.solana.com"]; // same list as the CSP
 
 const $ = id => document.getElementById(id);
 let conn, provider, owner, state;
@@ -36,13 +37,18 @@ function setSim(text, cls) {
   $("sim").replaceChildren(s);
 }
 
+const timeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
+
+// Try each public RPC (twice over), keep the first that answers. Any later error drops it (conn = null),
+// so the next button press starts over and can fall back to another RPC.
 async function rpc() {
   if (conn) return conn;
-  for (const u of RPCS) {
-    try { const c = new W.Connection(u, "confirmed"); await c.getLatestBlockhash(); return (conn = c); }
-    catch (e) { console.warn("RPC", u, e); }
-  }
-  throw new Error("could not connect to a Solana RPC");
+  for (let round = 0; round < 2; round++)
+    for (const u of RPCS) {
+      try { const c = new W.Connection(u, "confirmed"); await timeout(c.getLatestBlockhash(), 8000); return (conn = c); }
+      catch (e) { console.warn("RPC", u, e); }
+    }
+  throw new Error("could not connect to a Solana RPC. Check your connection, turn off ad/privacy blockers for this page and try again.");
 }
 
 function escrowOf(pk) {
@@ -116,7 +122,7 @@ $("connect").onclick = async () => {
     else if (!state.ok) log("Simulation failed — do not sign. Details are in the browser console.", "bad");
     else if (bal < 10000) log("Not enough SOL in the wallet for the network fee (need ~0.00001 SOL).", "bad");
     else { log("Ready: press “Withdraw”. Your wallet will show that you receive the amount above."); $("withdraw").disabled = false; }
-  } catch (e) { log("Error: " + (e.message || e), "bad"); }
+  } catch (e) { conn = null; log("Error: " + (e.message || e), "bad"); }
 };
 
 $("withdraw").onclick = async () => {
@@ -145,6 +151,7 @@ $("withdraw").onclick = async () => {
         { href: "https://solscan.io/tx/" + encodeURIComponent(sig), text: "View on Solscan" });
     await inspect(owner);
   } catch (e) {
+    conn = null;
     log("Error: " + (e.message || e), "bad");
     $("withdraw").disabled = false;
   }
@@ -158,5 +165,5 @@ $("probeBtn").onclick = async () => {
     const s = await inspect(pk);
     log(s.ok ? "The withdrawal passes simulation for this wallet. Only its owner can sign it."
              : s.lamports ? "Simulation failed." : "Escrow is empty.", s.ok ? "ok" : "bad");
-  } catch (e) { log("Error: " + (e.message || e), "bad"); }
+  } catch (e) { conn = null; log("Error: " + (e.message || e), "bad"); }
 };
